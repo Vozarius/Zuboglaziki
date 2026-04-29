@@ -4,21 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minecraft Server</title>
-    
-    <!-- Резервный пиксельный шрифт с поддержкой кириллицы (если нет локального файла) -->
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <style>
-        /* 
-        РАСКОММЕНТИРУЙ И ИЗМЕНИ ПУТЬ, ЕСЛИ У ТЕБЯ ЕСТЬ ФАЙЛ ШРИФТА:
-        @font-face {
-            font-family: 'Minecraft Rus';
-            src: url('fonts/MinecraftRus.ttf') format('truetype');
-        }
-        */
-
+        
         :root {
-            /* Замени 'Press Start 2P' на 'Minecraft Rus' если используешь свой файл */
             --main-font: 'Press Start 2P', 'Courier New', monospace; 
             --accent-color: #55FFFF;
             --btn-bg: #111155;
@@ -41,22 +31,20 @@
             background-color: #2b2b2b;
         }
 
-        /* Анимированный размытый фон */
         .background {
             position: absolute;
             top: -5%; 
             left: -5%;
-            width: 110%; /* С запасом, чтобы при сдвиге не было видно краев */
+            width: 110%; 
             height: 110%;
-            background-image: url('https://wallpapercave.com/wp/wp5113317.jpg');
+            background-image: url('images/Background.png');
             background-size: cover;
             background-position: center;
-            filter: blur(8px) brightness(0.4); /* Блюр и затемнение */
-            z-index: -1;
-            transition: transform 0.1s ease-out; /* Плавность следования за мышью */
+            filter: blur(8px) brightness(0.4);
+            z-index: 0;
+            transition: transform 0.1s ease-out; 
         }
 
-        /* Контейнер со всем контентом */
         .content {
             display: flex;
             flex-direction: column;
@@ -68,15 +56,13 @@
             gap: 40px;
         }
 
-        /* Логотип */
         .logo {
             max-width: 100%;
             height: auto;
-            image-rendering: pixelated; /* Сохраняет пиксельность логотипа */
+            image-rendering: pixelated; 
             filter: drop-shadow(4px 4px 0px rgba(0,0,0,0.5));
         }
 
-        /* Секция с IP и версией */
         .info-section {
             display: flex;
             flex-direction: column;
@@ -104,7 +90,6 @@
             transform: scale(1.05);
         }
 
-        /* Кнопка скачивания */
         .download-btn {
             display: inline-block;
             background-color: var(--btn-bg);
@@ -175,13 +160,11 @@
         </div>
 
         <!-- Кнопка скачивания. Атрибут 'download' заставляет скачивать файл, а не открывать -->
-        <a href="path/to/your/modpack.zip" download="ServerMods.zip" class="download-btn">
+        <a href="mods.mp3" download="ServerMods.zip" class="download-btn">
             Скачать/обновить<br>моды
         </a>
 
-        <!-- Discord -->
-        <a href="https://discord.gg/ТВОЯ_ССЫЛКА" target="_blank" class="discord-link">
-            <!-- SVG иконка Discord, чтобы не грузить картинками -->
+        <a href="https://discord.gg/3G9GUxy9zC" target="_blank" class="discord-link">
             <svg class="discord-icon" viewBox="0 0 127.14 96.36">
                 <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.3,46,96.19,53,91.08,65.69,84.69,65.69Z"/>
             </svg>
