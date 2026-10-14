@@ -64,7 +64,7 @@
         }
 
         .panorama-layer.is-fallback {
-            background-image: url("panorama/Panorama_South.png");
+            background-image: url("panorama/panorama_2.png");
             background-position: center;
             background-size: cover;
             background-repeat: no-repeat;
@@ -583,21 +583,21 @@
             gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
             const faceFiles = [
-                // Направления подтверждены по стыкам граней: файлы East и North в наборе названы наоборот.
-                // +X восток, -X запад, +Y верх, -Y низ, +Z юг, -Z север.
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_X, "panorama/Panorama_North.png"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_X, "panorama/Panorama_West.png"],
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_Y, "panorama/Panorama_Top.png"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, "panorama/Panorama_Bottom.png"],
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_Z, "panorama/Panorama_South.png"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, "panorama/Panorama_East.png"],
+                // Загружаем исходники по порядку: 0 север, 1 восток, 2 юг,
+                // 3 запад, 4 верх, 5 низ; в этой проекции север — +Z, юг — -Z.
+                ["panorama/panorama_0.png", gl.TEXTURE_CUBE_MAP_POSITIVE_Z],
+                ["panorama/panorama_1.png", gl.TEXTURE_CUBE_MAP_POSITIVE_X],
+                ["panorama/panorama_2.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_Z],
+                ["panorama/panorama_3.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_X],
+                ["panorama/panorama_4.png", gl.TEXTURE_CUBE_MAP_POSITIVE_Y],
+                ["panorama/panorama_5.png", gl.TEXTURE_CUBE_MAP_NEGATIVE_Y],
             ];
-            const images = await Promise.all(faceFiles.map(([, url]) => loadCubeFace(url)));
+            const images = await Promise.all(faceFiles.map(([url]) => loadCubeFace(url)));
             const texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
             // Для граней cubemap вертикальный flip переворачивает землю и небо местами.
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-            faceFiles.forEach(([target], index) => gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[index]));
+            faceFiles.forEach(([, target], index) => gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[index]));
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -630,12 +630,13 @@
                     gl.viewport(0, 0, width, height);
                 }
                 gl.uniform1f(uniforms.aspect, width / height);
-                gl.uniform1f(uniforms.fov, Math.tan(35 * Math.PI / 180));
-                // Minecraft Java 1.21.1: spin += tickDelta * 0.1° за кадр при стандартной скорости панорамы 1.0.
+                // Вертикальный FOV камеры — 90°; uniform хранит тангенс половины угла.
+                gl.uniform1f(uniforms.fov, Math.tan(45 * Math.PI / 180));
+                // Половина скорости Minecraft Java 1.21.1: spin += tickDelta * 0.05° за кадр.
                 // Эмулируем tickDelta как фазу 20 TPS; при включённом reduced motion камера остаётся неподвижной.
                 if (!reducedMotionPreference.matches) {
                     const tickDelta = ((now - startedAt) % 50) / 50;
-                    panoramaYaw += tickDelta * 0.1 * (Math.PI / 180);
+                    panoramaYaw += tickDelta * 0.05 * (Math.PI / 180);
                 }
                 gl.uniform1f(uniforms.yaw, panoramaYaw % (Math.PI * 2));
                 gl.uniform1f(uniforms.pitch, 0.1745329);
