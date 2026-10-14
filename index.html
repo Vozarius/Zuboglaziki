@@ -96,12 +96,13 @@
             align-items: center;
             margin: auto;
             text-align: center;
+            transform: translateY(clamp(-420px, calc(234px - 42vh), 0px));
         }
 
         .logo-stage {
             position: relative;
             width: min(86vw, 860px);
-            margin-bottom: clamp(16px, 3vh, 30px);
+            margin-bottom: clamp(8px, 1.5vh, 14px);
         }
 
         .logo {
@@ -113,13 +114,16 @@
 
         .splash {
             position: absolute;
-            top: 26%;
-            right: -1.5%;
-            max-width: 34%;
+            top: 46%;
+            right: -4%;
+            width: max-content;
+            max-width: min(88vw, 1100px);
             color: #ffff45;
-            font-size: clamp(12px, 1.65vw, 20px);
+            font-size: var(--splash-fit-size, clamp(32px, 4vw, 52px));
             line-height: 1.3;
             text-align: center;
+            white-space: normal;
+            overflow-wrap: break-word;
             text-shadow: 2px 2px 0 #3f3f00, 0 0 5px rgba(0, 0, 0, 0.6);
             transform: rotate(-18deg);
             transform-origin: center;
@@ -133,13 +137,16 @@
         }
 
         .server-entry {
+            position: relative;
             display: grid;
             width: min(100%, var(--menu-width));
-            grid-template-columns: 48px minmax(0, 1fr) 72px 24px;
+            grid-template-columns: 64px minmax(0, 1fr) 72px;
             align-items: center;
             gap: 12px;
             padding: 8px 10px;
-            border: 1px solid transparent;
+            margin-top: clamp(130px, 13vh, 158px);
+            margin-bottom: clamp(10px, 1.6vh, 18px);
+            border: 2px solid transparent;
             border-radius: 0;
             background: rgba(0, 0, 0, 0.08);
             color: inherit;
@@ -150,7 +157,7 @@
 
         .server-entry:hover,
         .server-entry:focus-visible {
-            border-color: rgba(255, 255, 255, 0.9);
+            border-color: rgba(255, 255, 255, 0.96);
             background: rgba(255, 255, 255, 0.16);
             outline: none;
         }
@@ -159,22 +166,26 @@
             background: rgba(255, 255, 255, 0.24);
         }
 
+        .server-icon-wrap {
+            position: relative;
+            display: block;
+            width: 64px;
+            height: 64px;
+            flex: none;
+        }
+
         .server-icon {
             display: block;
-            width: 48px;
-            height: 48px;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex: none;
             image-rendering: pixelated;
         }
 
         .server-copy {
             min-width: 0;
             line-height: 1.35;
-        }
-
-        .server-name {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 18px;
         }
 
         .server-meta {
@@ -207,9 +218,10 @@
 
         .copy-hint {
             display: block;
-            margin-top: 0;
-            color: rgba(255, 255, 255, 0.72);
-            font-size: 11px;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 12px;
+            font-weight: 400;
             line-height: 1.3;
         }
 
@@ -238,11 +250,17 @@
         }
 
         .server-join {
+            position: absolute;
+            top: 50%;
+            left: 50%;
             display: block;
-            width: 16px;
-            height: 16px;
+            width: 76%;
+            height: 76%;
             visibility: hidden;
             image-rendering: pixelated;
+            object-fit: contain;
+            pointer-events: auto;
+            transform: translate(-50%, -50%);
         }
 
         .server-entry:hover .server-join,
@@ -307,26 +325,10 @@
 
         .menu-button:disabled,
         .menu-button[aria-disabled="true"] {
+            border-image-source: url("sprites/button_disabled.png");
             cursor: not-allowed;
             color: #fff;
             opacity: 1;
-        }
-
-        .map-icon {
-            position: absolute;
-            left: 9px;
-            width: 24px;
-            height: 24px;
-            image-rendering: pixelated;
-        }
-
-        .request-feedback {
-            min-height: 1.5em;
-            margin: 10px 0 0;
-            color: #ffff55;
-            font-size: 12px;
-            line-height: 1.5;
-            text-align: center;
         }
 
         .panorama-error {
@@ -363,22 +365,20 @@
             }
 
             .splash {
-                font-size: clamp(11px, 3vw, 16px);
+                font-size: var(--splash-fit-size, clamp(26px, 6.8vw, 38px));
             }
 
             .server-entry {
-                grid-template-columns: 40px minmax(0, 1fr) 58px 20px;
+                grid-template-columns: 52px minmax(0, 1fr) 58px;
                 gap: 7px;
                 padding: 8px;
+                margin-top: clamp(90px, 12vh, 114px);
+                margin-bottom: 10px;
             }
 
-            .server-icon {
-                width: 40px;
-                height: 40px;
-            }
-
-            .server-name {
-                font-size: 14px;
+            .server-icon-wrap {
+                width: 52px;
+                height: 52px;
             }
 
             .server-address {
@@ -390,7 +390,7 @@
             }
 
             .copy-hint {
-                font-size: 9px;
+                font-size: 10px;
             }
 
             .ping-state {
@@ -401,9 +401,6 @@
                 font-size: 9px;
             }
 
-            .request-feedback {
-                font-size: 10px;
-            }
         }
 
         @media (max-height: 720px) and (min-width: 601px) {
@@ -441,36 +438,34 @@
             <span class="splash" id="splash" aria-label="Случайная фраза">Загружаем мир…</span>
         </div>
 
-        <section class="server-entry" id="server-entry" role="button" tabindex="0" aria-label="Зубоглазики — скопировать адрес сервера" title="Нажмите на строку, чтобы скопировать адрес">
-            <img src="4server-icon1.png" alt="" class="server-icon">
+        <section class="server-entry" id="server-entry" role="button" tabindex="0" aria-label="Скопировать адрес сервера" title="Нажмите, чтобы скопировать адрес">
+            <span class="server-icon-wrap">
+                <img src="4server-icon1.png" alt="" class="server-icon">
+                <img class="server-join" id="server-join" src="sprites/join.png" alt="" aria-hidden="true">
+            </span>
             <div class="server-copy">
-                <strong class="server-name">Зубоглазики</strong>
+                <span class="copy-hint" id="copy-hint" aria-live="polite">Нажмите, чтобы скопировать</span>
                 <div class="server-meta">
                     <span class="server-version">Minecraft NeoForge 1.21.1</span>
                     <span class="server-address">Адрес: <span class="ip-address" id="ip">Загрузка…</span></span>
                 </div>
-                <span class="copy-hint" id="copy-hint" aria-live="polite">Нажмите на строку, чтобы скопировать адрес</span>
             </div>
             <div class="ping-state" id="server-status" data-state="checking" role="status" aria-live="polite" title="Пинг от сервера сайта до игрового порта">
                 <img class="ping-icon" id="ping-icon" src="sprites/pinging_1.png" alt="Проверяем пинг">
                 <span class="ping-value" id="ping-value">Проверяем…</span>
             </div>
-            <img class="server-join" id="server-join" src="sprites/join.png" alt="">
         </section>
 
         <nav class="menu-buttons" aria-label="Главное меню">
             <a href="https://www.dropbox.com/scl/fi/2n6ldss2pns80wi7gqmyq/mods.zip?rlkey=l59t2zqzispqxslbamwu57icf&st=i0uuzs6r&dl=1" class="menu-button" target="_blank" rel="noopener noreferrer">
                 <span class="button-label">Скачать / обновить моды</span>
             </a>
-            <a href="#" id="map-link" class="menu-button" aria-disabled="true" title="Укажите MAP_PORT в локальном файле .env">
-                <img src="sprites/map.png" alt="" class="map-icon">
-                <span class="button-label">Посмотреть карту</span>
-            </a>
-            <button type="button" id="request-button" class="menu-button">Запросить включение сервера</button>
             <a href="https://discord.gg/3G9GUxy9zC" class="menu-button" target="_blank" rel="noopener noreferrer">Discord</a>
+            <button type="button" id="request-button" class="menu-button">Запросить включение сервера</button>
+            <a href="#" id="map-link" class="menu-button" aria-disabled="true" tabindex="-1" title="Сервер недоступен">
+                <span class="button-label">Карта</span>
+            </a>
         </nav>
-
-        <p class="request-feedback" id="request-feedback" aria-live="polite"></p>
     </main>
 
     <script>
@@ -483,16 +478,35 @@
         const pingValue = document.getElementById("ping-value");
         const mapLink = document.getElementById("map-link");
         const requestButton = document.getElementById("request-button");
-        const requestFeedback = document.getElementById("request-feedback");
         const splashElement = document.getElementById("splash");
+        const logoStage = document.querySelector(".logo-stage");
         const panoramaCanvas = document.getElementById("panorama-canvas");
         const panoramaLayer = document.querySelector(".panorama-layer");
         const panoramaError = document.getElementById("panorama-error");
         const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
         let serverIsOnline = false;
+        let mapUrl = "";
+        let requestSubmitted = false;
         let pingAnimationTimer = null;
         let pingFrame = 1;
         let copyFeedbackTimer = null;
+
+        const splashMeasureContext = document.createElement("canvas").getContext("2d");
+
+        function fitSplashText() {
+            if (!splashMeasureContext || !logoStage.clientWidth) return;
+
+            splashElement.style.removeProperty("--splash-fit-size");
+            const style = getComputedStyle(splashElement);
+            const baseFontSize = parseFloat(style.fontSize);
+            const maxTextWidth = Math.min(window.innerWidth * 0.88, 1100);
+            splashMeasureContext.font = `${style.fontWeight} ${baseFontSize}px ${style.fontFamily}`;
+
+            const textWidth = splashMeasureContext.measureText(splashElement.textContent.trim()).width;
+            const sizeRatio = textWidth > maxTextWidth ? maxTextWidth / textWidth : 1;
+            const fittedFontSize = baseFontSize * Math.max(0.58, sizeRatio);
+            splashElement.style.setProperty("--splash-fit-size", `${fittedFontSize}px`);
+        }
 
         async function loadSplash() {
             const fallback = [
@@ -509,6 +523,7 @@
             } catch {
                 splashElement.textContent = fallback[Math.floor(Math.random() * fallback.length)];
             }
+            fitSplashText();
         }
 
         function compileShader(gl, type, source) {
@@ -684,21 +699,36 @@
             pingValue.textContent = `${pingMs} мс`;
         }
 
+        function updateMapLink() {
+            const canOpenMap = Boolean(mapUrl && serverIsOnline);
+            mapLink.setAttribute("aria-disabled", String(!canOpenMap));
+            mapLink.tabIndex = canOpenMap ? 0 : -1;
+            mapLink.title = canOpenMap
+                ? "Открыть карту"
+                : mapUrl ? "Карта доступна, когда сервер включён" : "Карта не настроена";
+            if (canOpenMap) {
+                mapLink.href = mapUrl;
+                mapLink.target = "_blank";
+                mapLink.rel = "noopener noreferrer";
+            } else {
+                mapLink.removeAttribute("href");
+                mapLink.removeAttribute("target");
+                mapLink.removeAttribute("rel");
+            }
+        }
+
         async function loadPublicConfig() {
             try {
                 const response = await fetch("api/config", { cache: "no-store" });
                 if (!response.ok) throw new Error("Не удалось загрузить настройки сайта.");
                 const config = await response.json();
                 ipElement.textContent = config.serverAddress;
-                if (config.mapUrl) {
-                    mapLink.href = config.mapUrl;
-                    mapLink.target = "_blank";
-                    mapLink.rel = "noopener noreferrer";
-                    mapLink.removeAttribute("aria-disabled");
-                    mapLink.removeAttribute("title");
-                }
+                mapUrl = config.mapUrl || "";
+                updateMapLink();
             } catch {
                 ipElement.textContent = "Адрес недоступен";
+                mapUrl = "";
+                updateMapLink();
             }
         }
 
@@ -711,13 +741,20 @@
                 serverIsOnline = status.isOpen;
                 if (serverIsOnline) setPingAvailable(status.pingMs ?? 0);
                 else setPingUnreachable();
-                requestButton.disabled = serverIsOnline;
-                requestButton.title = serverIsOnline ? "Сервер уже работает" : "Отправить запрос администраторам";
+                updateMapLink();
+                requestButton.disabled = serverIsOnline || requestSubmitted;
+                requestButton.title = requestSubmitted
+                    ? "Запрос уже отправлен"
+                    : serverIsOnline ? "Сервер уже работает" : "Отправить запрос администраторам";
             } catch {
                 serverIsOnline = false;
                 setPingUnreachable();
                 pingIcon.alt = "Не удалось получить статус сервера";
-                requestButton.disabled = false;
+                updateMapLink();
+                requestButton.disabled = requestSubmitted;
+                requestButton.title = requestSubmitted
+                    ? "Запрос уже отправлен"
+                    : "Отправить запрос администраторам";
             }
         }
 
@@ -753,7 +790,7 @@
                 joinIcon.src = "sprites/accept.png";
                 clearTimeout(copyFeedbackTimer);
                 copyFeedbackTimer = setTimeout(() => {
-                    copyHint.textContent = "Нажмите на строку, чтобы скопировать адрес";
+                    copyHint.textContent = "Нажмите, чтобы скопировать";
                     delete serverEntry.dataset.copied;
                     updateJoinIcon();
                 }, 1300);
@@ -761,7 +798,7 @@
                 copyHint.textContent = "Не удалось скопировать адрес";
                 clearTimeout(copyFeedbackTimer);
                 copyFeedbackTimer = setTimeout(() => {
-                    copyHint.textContent = "Нажмите на строку, чтобы скопировать адрес";
+                    copyHint.textContent = "Нажмите, чтобы скопировать";
                 }, 1800);
             }
         }
@@ -782,21 +819,20 @@
         requestButton.addEventListener("click", async () => {
             if (requestButton.disabled) return;
             requestButton.disabled = true;
-            requestFeedback.textContent = "Отправляем запрос…";
+            requestSubmitted = true;
+            requestButton.title = "Запрос уже отправлен";
             try {
                 const response = await fetch("api/request-start", { method: "POST" });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || "Не удалось отправить запрос.");
-                requestFeedback.textContent = result.message;
             } catch (error) {
-                requestFeedback.textContent = error instanceof TypeError
-                    ? "Не удалось связаться с сервером сайта."
-                    : (error.message || "Не удалось отправить запрос. Попробуйте позже.");
-            } finally {
-                requestButton.disabled = serverIsOnline;
+                console.error("Не удалось отправить запрос на включение сервера:", error);
             }
         });
 
+        fitSplashText();
+        window.addEventListener("resize", fitSplashText, { passive: true });
+        if (document.fonts?.ready) document.fonts.ready.then(fitSplashText);
         loadSplash();
         loadPublicConfig();
         refreshServerStatus();
