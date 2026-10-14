@@ -89,6 +89,9 @@ const listenPort = readPort(process.env.PORT || "3000", "PORT");
 let statusCache = null;
 let statusCacheTime = 0;
 let statusProbe = null;
+let mapStatusCache = null;
+let mapStatusCacheTime = 0;
+let mapStatusProbe = null;
 let lastRequestAttempt = 0;
 let requestInFlight = false;
 
@@ -103,9 +106,9 @@ function sendJson(response, statusCode, payload, extraHeaders = {}) {
     response.end(body);
 }
 
-function probeServerPort() {
+function probePort(host, port) {
     return new Promise((resolveProbe) => {
-        const socket = net.createConnection({ host: serverHost, port: serverPort });
+        const socket = net.createConnection({ host, port });
         const startedAt = Date.now();
         let finished = false;
         const finish = (result) => {
@@ -121,6 +124,10 @@ function probeServerPort() {
     });
 }
 
+function probeServerPort() {
+    return probePort(serverHost, serverPort);
+}
+
 async function getServerStatus() {
     if (statusCache !== null && Date.now() - statusCacheTime < 4000) return statusCache;
     if (statusProbe) return statusProbe;
@@ -132,6 +139,21 @@ async function getServerStatus() {
         return statusCache;
     } finally {
         statusProbe = null;
+    }
+}
+
+async function getMapStatus() {
+    if (!mapPort) return { isOpen: false, pingMs: null };
+    if (mapStatusCache !== null && Date.now() - mapStatusCacheTime < 4000) return mapStatusCache;
+    if (mapStatusProbe) return mapStatusProbe;
+
+    mapStatusProbe = probePort(mapHost, mapPort);
+    try {
+        mapStatusCache = await mapStatusProbe;
+        mapStatusCacheTime = Date.now();
+        return mapStatusCache;
+    } finally {
+        mapStatusProbe = null;
     }
 }
 
@@ -260,7 +282,8 @@ const app = createServer(async (request, response) => {
     }
 
     if (pathname === "/api/status" && request.method === "GET") {
-        sendJson(response, 200, await getServerStatus());
+        const [serverStatus, mapStatus] = await Promise.all([getServerStatus(), getMapStatus()]);
+        sendJson(response, 200, { ...serverStatus, mapIsOpen: mapStatus.isOpen });
         return;
     }
 

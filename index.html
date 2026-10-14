@@ -103,6 +103,7 @@
             position: relative;
             width: min(86vw, 860px);
             margin-bottom: clamp(8px, 1.5vh, 14px);
+            transform: translateY(clamp(8px, 1.2vh, 14px));
         }
 
         .logo {
@@ -114,12 +115,12 @@
 
         .splash {
             position: absolute;
-            top: 46%;
-            right: -4%;
+            top: 70%;
+            right: -20%;
             width: max-content;
             max-width: min(88vw, 1100px);
             color: #ffff45;
-            font-size: var(--splash-fit-size, clamp(32px, 4vw, 52px));
+            font-size: var(--splash-fit-size, clamp(10.5px, 1.335vw, 17.5px));
             line-height: 1.3;
             text-align: center;
             white-space: normal;
@@ -365,7 +366,7 @@
             }
 
             .splash {
-                font-size: var(--splash-fit-size, clamp(26px, 6.8vw, 38px));
+                font-size: var(--splash-fit-size, clamp(8.5px, 2.265vw, 12.5px));
             }
 
             .server-entry {
@@ -485,6 +486,7 @@
         const panoramaError = document.getElementById("panorama-error");
         const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
         let serverIsOnline = false;
+        let mapPortIsOpen = false;
         let mapUrl = "";
         let requestSubmitted = false;
         let pingAnimationTimer = null;
@@ -492,6 +494,49 @@
         let copyFeedbackTimer = null;
 
         const splashMeasureContext = document.createElement("canvas").getContext("2d");
+
+        function wrapSplashText(text, maxChars = 50) {
+            const words = String(text).trim().split(/\s+/).filter(Boolean);
+            const lines = [];
+            let line = "";
+
+            for (const word of words) {
+                if (word.length > maxChars) {
+                    if (line) lines.push(line);
+                    line = "";
+                    for (let start = 0; start < word.length; start += maxChars) {
+                        const chunk = word.slice(start, start + maxChars);
+                        if (chunk.length === maxChars) lines.push(chunk);
+                        else line = chunk;
+                    }
+                    continue;
+                }
+
+                const candidate = line ? `${line} ${word}` : word;
+                if (line && candidate.length > maxChars) {
+                    lines.push(line);
+                    line = word;
+                } else {
+                    line = candidate;
+                }
+            }
+
+            if (line) lines.push(line);
+            return lines.length ? lines : [""];
+        }
+
+        function setSplashText(text) {
+            const normalizedText = String(text).replace(/\s+/g, " ").trim();
+            splashElement.dataset.fullText = normalizedText;
+            splashElement.setAttribute("aria-label", normalizedText || "Случайная фраза");
+
+            const fragment = document.createDocumentFragment();
+            wrapSplashText(normalizedText).forEach((line, index) => {
+                if (index > 0) fragment.append(document.createElement("br"));
+                fragment.append(document.createTextNode(line));
+            });
+            splashElement.replaceChildren(fragment);
+        }
 
         function fitSplashText() {
             if (!splashMeasureContext || !logoStage.clientWidth) return;
@@ -502,7 +547,8 @@
             const maxTextWidth = Math.min(window.innerWidth * 0.88, 1100);
             splashMeasureContext.font = `${style.fontWeight} ${baseFontSize}px ${style.fontFamily}`;
 
-            const textWidth = splashMeasureContext.measureText(splashElement.textContent.trim()).width;
+            const textLines = wrapSplashText(splashElement.dataset.fullText || splashElement.textContent.trim());
+            const textWidth = Math.max(...textLines.map((line) => splashMeasureContext.measureText(line).width));
             const sizeRatio = textWidth > maxTextWidth ? maxTextWidth / textWidth : 1;
             const fittedFontSize = baseFontSize * Math.max(0.58, sizeRatio);
             splashElement.style.setProperty("--splash-fit-size", `${fittedFontSize}px`);
@@ -518,10 +564,10 @@
                 const response = await fetch("splashes.txt", { cache: "no-cache" });
                 if (!response.ok) throw new Error("Фразы не найдены.");
                 const lines = (await response.text()).split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
-                if (lines.length) splashElement.textContent = lines[Math.floor(Math.random() * lines.length)];
-                else splashElement.textContent = fallback[Math.floor(Math.random() * fallback.length)];
+                if (lines.length) setSplashText(lines[Math.floor(Math.random() * lines.length)]);
+                else setSplashText(fallback[Math.floor(Math.random() * fallback.length)]);
             } catch {
-                splashElement.textContent = fallback[Math.floor(Math.random() * fallback.length)];
+                setSplashText(fallback[Math.floor(Math.random() * fallback.length)]);
             }
             fitSplashText();
         }
@@ -700,12 +746,12 @@
         }
 
         function updateMapLink() {
-            const canOpenMap = Boolean(mapUrl && serverIsOnline);
+            const canOpenMap = Boolean(mapUrl && mapPortIsOpen);
             mapLink.setAttribute("aria-disabled", String(!canOpenMap));
             mapLink.tabIndex = canOpenMap ? 0 : -1;
             mapLink.title = canOpenMap
                 ? "Открыть карту"
-                : mapUrl ? "Карта доступна, когда сервер включён" : "Карта не настроена";
+                : mapUrl ? "Порт карты недоступен" : "Карта не настроена";
             if (canOpenMap) {
                 mapLink.href = mapUrl;
                 mapLink.target = "_blank";
@@ -739,6 +785,7 @@
                 if (!response.ok) throw new Error("Статус недоступен.");
                 const status = await response.json();
                 serverIsOnline = status.isOpen;
+                mapPortIsOpen = status.mapIsOpen;
                 if (serverIsOnline) setPingAvailable(status.pingMs ?? 0);
                 else setPingUnreachable();
                 updateMapLink();
@@ -748,6 +795,7 @@
                     : serverIsOnline ? "Сервер уже работает" : "Отправить запрос администраторам";
             } catch {
                 serverIsOnline = false;
+                mapPortIsOpen = false;
                 setPingUnreachable();
                 pingIcon.alt = "Не удалось получить статус сервера";
                 updateMapLink();
