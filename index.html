@@ -63,6 +63,13 @@
             background: #27394b;
         }
 
+        .panorama-layer.is-fallback {
+            background-image: url("panorama/Panorama_South.png");
+            background-position: center;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+
         .panorama-canvas {
             position: absolute;
             inset: 0;
@@ -322,6 +329,24 @@
             text-align: center;
         }
 
+        .panorama-error {
+            position: fixed;
+            z-index: 3;
+            right: 12px;
+            bottom: 12px;
+            left: 12px;
+            width: fit-content;
+            max-width: min(640px, calc(100vw - 24px));
+            margin-inline: auto;
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.76);
+            color: #fff;
+            font-size: 12px;
+            line-height: 1.5;
+            text-align: center;
+        }
+
         @media (max-width: 600px) {
             body {
                 padding: 22px 14px;
@@ -408,6 +433,7 @@
         <canvas class="panorama-canvas" id="panorama-canvas"></canvas>
     </div>
     <div class="panorama-shade" aria-hidden="true"></div>
+    <div class="panorama-error" id="panorama-error" role="status" hidden></div>
 
     <main class="main-menu">
         <div class="logo-stage">
@@ -460,6 +486,8 @@
         const requestFeedback = document.getElementById("request-feedback");
         const splashElement = document.getElementById("splash");
         const panoramaCanvas = document.getElementById("panorama-canvas");
+        const panoramaLayer = document.querySelector(".panorama-layer");
+        const panoramaError = document.getElementById("panorama-error");
         const reducedMotionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
         let serverIsOnline = false;
         let pingAnimationTimer = null;
@@ -555,17 +583,20 @@
             gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
             const faceFiles = [
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_X, "panorama/Panorama_1_JE1.webp"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_X, "panorama/Panorama_3_JE1.webp"],
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_Y, "panorama/Panorama_4_JE1.webp"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, "panorama/Panorama_5_JE1.webp"],
-                [gl.TEXTURE_CUBE_MAP_POSITIVE_Z, "panorama/Panorama_2_JE1.webp"],
-                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, "panorama/Panorama_0_JE1.webp"],
+                // Направления подтверждены по стыкам граней: файлы East и North в наборе названы наоборот.
+                // +X восток, -X запад, +Y верх, -Y низ, +Z юг, -Z север.
+                [gl.TEXTURE_CUBE_MAP_POSITIVE_X, "panorama/Panorama_North.png"],
+                [gl.TEXTURE_CUBE_MAP_NEGATIVE_X, "panorama/Panorama_West.png"],
+                [gl.TEXTURE_CUBE_MAP_POSITIVE_Y, "panorama/Panorama_Top.png"],
+                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, "panorama/Panorama_Bottom.png"],
+                [gl.TEXTURE_CUBE_MAP_POSITIVE_Z, "panorama/Panorama_South.png"],
+                [gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, "panorama/Panorama_East.png"],
             ];
             const images = await Promise.all(faceFiles.map(([, url]) => loadCubeFace(url)));
             const texture = gl.createTexture();
             gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+            // Для граней cubemap вертикальный flip переворачивает землю и небо местами.
+            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
             faceFiles.forEach(([target], index) => gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, images[index]));
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
             gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -584,6 +615,7 @@
             gl.uniform1i(uniforms.panorama, 0);
 
             const startedAt = performance.now();
+            let panoramaYaw = 0;
             let canvasWidth = 0;
             let canvasHeight = 0;
             function draw(now) {
@@ -599,10 +631,13 @@
                 }
                 gl.uniform1f(uniforms.aspect, width / height);
                 gl.uniform1f(uniforms.fov, Math.tan(35 * Math.PI / 180));
-                // Полный оборот занимает 36 секунд, а при настройке «меньше анимации» — 60.
-                const rotationDuration = reducedMotionPreference.matches ? 60000 : 36000;
-                const yaw = ((now - startedAt) / rotationDuration) * Math.PI * 2;
-                gl.uniform1f(uniforms.yaw, yaw % (Math.PI * 2));
+                // Minecraft Java 1.21.1: spin += tickDelta * 0.1° за кадр при стандартной скорости панорамы 1.0.
+                // Эмулируем tickDelta как фазу 20 TPS; при включённом reduced motion камера остаётся неподвижной.
+                if (!reducedMotionPreference.matches) {
+                    const tickDelta = ((now - startedAt) % 50) / 50;
+                    panoramaYaw += tickDelta * 0.1 * (Math.PI / 180);
+                }
+                gl.uniform1f(uniforms.yaw, panoramaYaw % (Math.PI * 2));
                 gl.uniform1f(uniforms.pitch, 0.1745329);
                 gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
                 requestAnimationFrame(draw);
@@ -768,6 +803,11 @@
         setupPanorama().catch((error) => {
             console.error("Не удалось запустить вращение 3D-панорамы:", error);
             panoramaCanvas.style.display = "none";
+            panoramaLayer.classList.add("is-fallback");
+            panoramaError.textContent = window.location.protocol === "file:"
+                ? "Страница открыта как файл. Запустите npm start и откройте http://localhost:3000 — так загрузятся панорама и статус сервера."
+                : `Не удалось запустить 3D-панораму: ${error.message || "ошибка WebGL"}`;
+            panoramaError.hidden = false;
         });
     </script>
 </body>

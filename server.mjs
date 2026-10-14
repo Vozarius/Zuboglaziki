@@ -220,7 +220,7 @@ const publicFiles = new Set([
     "minecraft.ttf",
     "images/Background.png",
     "splashes.txt",
-    ...Array.from({ length: 6 }, (_, index) => `panorama/Panorama_${index}_JE1.webp`),
+    ...["Bottom", "East", "North", "South", "Top", "West"].map((name) => `panorama/Panorama_${name}.png`),
     ...[
         "button.png",
         "button_highlighted.png",
